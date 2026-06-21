@@ -3,6 +3,10 @@
 const COLS = ['airline', 'arrFlight', 'depFlight', 'sta', 'std', 'from', 'to',
   'acType', 'handler', 'paxIn', 'paxTransito', 'paxOut', 'correa', 'stand', 'gate', 'ckin'];
 
+// Meses en LETRAS (formato de aviación: "22JUN26", "22-JUN-2026") — ES + EN, clave de 3 letras.
+const MON = { ene: 1, jan: 1, feb: 2, mar: 3, abr: 4, apr: 4, may: 5, jun: 6, jul: 7,
+  ago: 8, aug: 8, sep: 9, set: 9, oct: 10, nov: 11, dic: 12, dec: 12 };
+
 // Acepta ISO/año-primero ("2026-06-20", "2026/06/20") o con barras ("20/6/26",
 // "6/20/2026"), con o sin AM/PM. La hora se extrae siempre. En el formato con barras
 // NO decide aún día/mes vs mes/día: deja los componentes en _c1/_c2 y el formato lo
@@ -25,6 +29,15 @@ export function parseDateTime(s) {
     let y = +m[3]; if (y < 100) y += 2000;
     return { y, _c1: +m[1], _c2: +m[2], h, mi };
   }
+
+  // Mes en LETRAS (aviación): "22JUN26", "22-JUN-2026", "22 jun 2026". AMS lo exporta así en
+  // algunas PCs (según la config regional de Windows); antes quedaban SIN fecha → 0 OVER.
+  m = s.match(/(\d{1,2})[\s./-]*(ene|feb|mar|abr|may|jun|jul|ago|sep|set|oct|nov|dic|jan|apr|aug|dec)[a-zé]*[\s./-]*(\d{2,4})/i);
+  if (m) {
+    let y = +m[3]; if (y < 100) y += 2000;
+    return { y, mo: MON[m[2].toLowerCase()], d: +m[1], h, mi };
+  }
+
   return { h, mi, raw: s };   // sin fecha, pero con hora
 }
 

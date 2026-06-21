@@ -162,7 +162,8 @@ function logOverDiag(diag) {
   console.info(`[AIPC OVER] día=${diag.reportDay} · formato=${diag.formato} (${diag.metodo}) · `
     + `vuelos=${diag.total} · OVER=${diag.over} (IN ${diag.overIn}/OUT ${diag.overOut}) · sinFecha=${diag.sinFecha}`);
   if (diag.over === 0 || diag.sinFecha > 0) {
-    console.warn('[AIPC OVER] 0 OVER o fechas sin parsear — detalle por vuelo (raw STA/STD → día):');
+    const ej = diag.detalle.slice(0, 4).map((d) => `STA="${d.rawSTA}" STD="${d.rawSTD}"`).join('  |  ');
+    console.warn('[AIPC OVER] 0 OVER o fechas sin parsear. Ejemplos de STA/STD CRUDOS → ' + ej);
     (console.table || console.log)(diag.detalle);
   }
 }
