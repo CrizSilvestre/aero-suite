@@ -134,7 +134,15 @@ input[type=date] { padding: 8px 10px; border: 1px solid var(--line-2); border-ra
 .tab { padding: 6px 14px; border: 1px solid var(--line-2); border-radius: 8px; background: #fff; color: var(--muted); font-size: 13px; cursor: pointer; }
 .tab:hover { background: #f5f7f9; }
 .tab.active { background: var(--navy); color: #fff; border-color: var(--navy); font-weight: 600; }
-.xlsx-frame { border: 1px solid var(--line); border-radius: 10px; background: #fff; padding: 12px; overflow: auto; max-height: 72vh; }
+.xlsx-frame { border: 1px solid var(--line); border-radius: 10px; background: #fff; padding: 12px; overflow: auto; max-height: 85vh; min-height: 220px; resize: both; }
+
+/* AIPC: barra de herramientas del Excel + modo Ampliar (ver el Excel más completo) */
+.xlsx-tools { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+#xlsx-expand { font-size: 12px; padding: 4px 10px; white-space: nowrap; }
+#view-excel.maximized .xlsx-frame { position: fixed; top: 10px; left: 10px; right: 10px; bottom: 10px;
+  width: auto !important; height: auto !important; max-height: none; min-height: 0;
+  z-index: 9999; resize: none; box-shadow: 0 10px 44px rgba(31,56,100,.35); }
+#view-excel.maximized #xlsx-expand { position: fixed; top: 18px; right: 24px; z-index: 10000; }
 
 /* AIPC: edición libre de celdas del preview + toggle ferry (lo editado va al Excel) */
 .xlsx-frame .px-edit { cursor: text; outline: none; }

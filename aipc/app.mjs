@@ -344,9 +344,19 @@ document.querySelectorAll('.tab').forEach((t) => {
     const v = t.dataset.view;
     $('view-correo').style.display = v === 'correo' ? '' : 'none';
     $('view-excel').style.display = v === 'excel' ? '' : 'none';
+    if (v !== 'excel') setExcelMax(false);   // al salir del Excel, salir de Ampliar
     document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('active', x === t));
   };
 });
+
+// Ampliar/Reducir el preview del Excel (para que el personal lo vea más completo).
+// NO se guarda: se reinicia en cada sesión. El handle ↘ (CSS resize) también es por sesión.
+function setExcelMax(on) {
+  $('view-excel').classList.toggle('maximized', on);
+  const b = $('xlsx-expand'); if (b) b.textContent = on ? '✕ Cerrar' : '⛶ Ampliar';
+}
+$('xlsx-expand')?.addEventListener('click', () => setExcelMax(!$('view-excel').classList.contains('maximized')));
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setExcelMax(false); });
 
 updateDestUI();
 markPdf();   // restaura el horario guardado (si lo hay)

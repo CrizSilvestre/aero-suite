@@ -29,8 +29,9 @@
     .suite-foot { position: absolute; left: 0; right: 0; bottom: 0; height: 30px; display: flex; align-items: center;
       justify-content: space-between; padding: 0 16px; background: #fff; border-top: 1px solid var(--line);
       font-size: 11.5px; color: var(--muted); z-index: 2; }
-    .suite-foot .ver { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 11px; background: var(--bg);
-      border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; color: var(--navy); font-weight: 700; letter-spacing: .3px; }
+    .suite-foot .ver { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 11.5px; background: var(--navy);
+      border: 1px solid var(--navy); border-radius: 999px; padding: 2px 11px; color: #fff; font-weight: 700; letter-spacing: .4px;
+      box-shadow: 0 1px 3px rgba(31,56,100,.25); }
   </style>
 </head>
 <body>
@@ -55,7 +56,7 @@
   <script>
     // Versión visible de la Suite. Subir SIEMPRE al aplicar un cambio: si tras desplegar
     // este número no cambia en el footer, el navegador sirvió la versión vieja (caché).
-    const VERSION = 'v1.2.0';
+    const VERSION = 'v1.3.0';
 
     // Shell mínimo: alterna entre las dos apps (cada una corre intacta en su iframe).
     // Carga perezosa: el iframe recibe su src al mostrarse por primera vez (no carga las
