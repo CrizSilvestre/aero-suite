@@ -1,0 +1,12 @@
+{
+  "name": "aipc-planner",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "test": "node test/transform.test.mjs"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "pdfjs-dist": "^4.10.38"
+  }
+}

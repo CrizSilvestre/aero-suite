@@ -1,0 +1,6 @@
+node_modules/
+test/sched-test.pdf
+test/*.xlsx
+test/*.eml
+*.local
+.DS_Store

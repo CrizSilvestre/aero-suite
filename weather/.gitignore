@@ -1,0 +1,5 @@
+node_modules/
+test/*.eml
+test/sample.pdf
+*.local
+.DS_Store

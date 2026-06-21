@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AeroWeather · Generador de correo meteorológico</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">☀</span>
+      <span>AeroWeather
+        <small>Pronóstico ONAMET → correo Outlook · Aeropuerto Internacional de Punta Cana (PUJ)</small>
+      </span>
+    </div>
+    <span class="spacer"></span>
+    <span class="badge-offline">● 100% local · sin servidor</span>
+  </header>
+
+  <nav class="pipeline" id="pipeline">
+    <div class="step" data-step="pdf"><span class="dot">1</span> PDF ONAMET</div><span class="sep"></span>
+    <div class="step" data-step="datos"><span class="dot">2</span> Datos extraídos</div><span class="sep"></span>
+    <div class="step" data-step="img"><span class="dot">3</span> Imágenes</div><span class="sep"></span>
+    <div class="step" data-step="valid"><span class="dot">4</span> Validación</div><span class="sep"></span>
+    <div class="step" data-step="out"><span class="dot">5</span> Outlook</div>
+  </nav>
+
+  <main class="wrap">
+    <section class="left">
+      <div class="card">
+        <h2>1 · Documento ONAMET</h2>
+        <div class="drop" id="drop-pdf">
+          <div class="big">📄</div>
+          <div>Arrastra el <b>PDF de ONAMET</b> aquí<br>o haz clic para seleccionar</div>
+        </div>
+        <input type="file" id="file-pdf" accept="application/pdf" hidden />
+        <div class="hint" id="pdf-hint">Se procesa en tu navegador; el archivo no sale del equipo.</div>
+      </div>
+
+      <div class="card">
+        <h2>2 · Imágenes meteorológicas</h2>
+        <div class="drop-row">
+          <div>
+            <div class="drop" id="drop-radar" tabindex="0"><div class="big">🛰️</div><div>Radar / satélite</div></div>
+            <input type="file" id="file-radar" accept="image/*" hidden />
+          </div>
+          <div>
+            <div class="drop" id="drop-windy" tabindex="0"><div class="big">🌬️</div><div>Windy</div></div>
+            <input type="file" id="file-windy" accept="image/*" hidden />
+          </div>
+        </div>
+        <div class="hint">Arrástralas, haz clic, o <b>pégalas con ⌘/Ctrl + V</b> pasando el cursor por la zona.</div>
+        <label class="imgw">Ancho en el correo (px) — igual a tu firma: <input type="number" id="img-width" min="200" max="1400" step="1" /></label>
+      </div>
+
+      <div class="card">
+        <h2>3 · Distribución (BCC)</h2>
+        <div class="chips" id="bcc-chips"></div>
+        <div class="row">
+          <input type="email" id="bcc-input" placeholder="agregar correo y Enter…" />
+          <button class="btn" id="bcc-add">Añadir</button>
+        </div>
+        <button class="btn-ghost" id="bcc-reset">↺ Restablecer lista por defecto</button>
+      </div>
+
+      <div class="card opts">
+        <h2>Opciones</h2>
+        <label><input type="checkbox" id="opt-greeting" /> Saludo automático según la hora (Buenos días / tardes / noches)</label>
+        <label><input type="checkbox" id="opt-heading" /> Incluir encabezado “Pronóstico:” antes de los días</label>
+        <label><input type="checkbox" id="opt-bullets" /> Viñetas en Condiciones Generales</label>
+      </div>
+
+      <div class="card">
+        <h2>Mi firma</h2>
+        <div class="sig-box" id="signature-input" contenteditable="true" data-placeholder="Pega aquí tu firma de Outlook (Ctrl/Cmd+V)…"></div>
+        <div class="sig-actions">
+          <button class="btn-ghost" id="sig-clear">✕ Borrar firma</button>
+          <span class="sig-status" id="sig-status"></span>
+        </div>
+        <div class="hint">Solo la primera vez: copia tu firma desde un correo de Outlook y pégala arriba. Se guarda en este navegador.</div>
+      </div>
+
+      <div class="card">
+        <h2>4 · Validación</h2>
+        <div id="checklist"></div>
+      </div>
+
+      <div class="card opts">
+        <h2>5 · Destino de envío</h2>
+        <label><input type="radio" name="dest" value="outlook" /> Outlook (escritorio) — genera <b>Weather.eml</b></label>
+        <label><input type="radio" name="dest" value="gmail" /> Gmail / webmail — copia el correo y abre Gmail</label>
+      </div>
+
+      <button class="btn-primary" id="generate" disabled>Generar correo y abrir en Outlook</button>
+      <div class="hint" id="gen-hint">Se descargará <b>Weather.eml</b>; ábrelo para que Outlook cree el borrador.</div>
+    </section>
+
+    <section class="right">
+      <div class="card">
+        <div class="preview-head">
+          <h2 style="margin:0">Vista previa del correo</h2>
+          <span class="mailmeta" id="mailmeta"></span>
+        </div>
+        <div class="email-frame">
+          <div class="email-toolbar">
+            <span>Para: <i>(vacío)</i></span>
+            <span>CCO: <b id="tb-bcc">0</b></span>
+            <span class="spacer" style="flex:1"></span>
+            <span class="subj">Asunto: Weather</span>
+          </div>
+          <div class="email-body" id="preview">
+            <div class="placeholder">Sube el PDF de ONAMET para ver el correo generado.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">© <span id="year">2026</span> CSilvestre · AeroWeather</footer>
+
+  <div class="toast" id="toast"></div>
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>
