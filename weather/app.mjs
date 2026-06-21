@@ -266,6 +266,15 @@ function persistSig() {
 sigEl.addEventListener('input', persistSig);
 $('sig-clear').onclick = () => { sigEl.innerHTML = ''; persistSig(); };
 $('sig-status').textContent = state.signature ? '✓ Firma guardada' : '';
+// Aero Suite: firma COMPARTIDA. Si la cambian en la otra herramienta (mismo origen), refleja aquí sin recargar.
+window.addEventListener('storage', (e) => {
+  if (e.key === CONFIG.storageKeys.signature) {
+    state.signature = e.newValue || '';
+    sigEl.innerHTML = state.signature;
+    $('sig-status').textContent = state.signature ? '✓ Firma guardada' : '';
+    render();
+  }
+});
 
 $('img-width').value = state.options.imageWidth;
 $('img-width').addEventListener('input', (e) => {

@@ -18,5 +18,6 @@ export const CONFIG = {
   defaultRecipients: [],         // To/CCO
   signatureHtml: '',             // cada agente pega su firma una vez
 
-  storageKeys: { recipients: 'aipc.recipients', signature: 'aipc.signature', options: 'aipc.options', schedule: 'aipc.schedule' },
+  // signature: 'suite.signature' → firma COMPARTIDA con AeroWeather (Aero Suite). El resto separado.
+  storageKeys: { recipients: 'aipc.recipients', signature: 'suite.signature', options: 'aipc.options', schedule: 'aipc.schedule' },
 };

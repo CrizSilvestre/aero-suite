@@ -30,7 +30,7 @@ export const CONFIG = {
 
   storageKeys: {
     bcc: 'aerowx.bcc',
-    signature: 'aerowx.signature',
+    signature: 'suite.signature',   // Aero Suite: firma COMPARTIDA con AIPC (misma persona, una firma)
     options: 'aerowx.options',
   },
 };
