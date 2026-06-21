@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>AeroWeather · Generador de correo meteorológico</title>
   <link rel="stylesheet" href="styles.css" />
+  <!-- Aero Suite: al correr embebida en la Suite, oculta su barra/footer propios (la Suite los pone). -->
+  <script>if (window.self !== window.top) document.documentElement.classList.add('embedded');</script>
+  <style>html.embedded .topbar,html.embedded .app-footer{display:none}html.embedded .pipeline{margin-top:0}</style>
 </head>
 <body>
   <header class="topbar">
