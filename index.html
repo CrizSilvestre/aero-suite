@@ -21,6 +21,18 @@
       cursor: pointer; display: flex; align-items: center; gap: 7px; transition: background .15s ease, color .15s ease; }
     .swap button:hover { background: #e3e8f0; }
     .swap button.active { background: var(--navy); color: #fff; font-weight: 600; box-shadow: 0 1px 4px rgba(31,56,100,.25); }
+    .swap button.soon { color: #98a4ba; }
+    .swap button.soon:hover { background: #eef2f8; color: #5b6b85; }
+    .swap .soon-tag { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px;
+      background: #ffd24d; color: #5a4500; border-radius: 999px; padding: 1px 6px; }
+    .suite-toast { position: fixed; left: 50%; bottom: 54px; transform: translate(-50%, 12px); max-width: 88vw;
+      background: var(--navy); color: #fff; padding: 11px 18px; border-radius: 12px; font-size: 14px; line-height: 1.35;
+      box-shadow: 0 10px 34px rgba(31,56,100,.35); opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease; z-index: 50; }
+    .suite-toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .ripple { position: fixed; width: 70px; height: 70px; border-radius: 50%; border: 2px solid var(--navy);
+      pointer-events: none; z-index: 60; transform: translate(-50%, -50%) scale(0); opacity: .55;
+      animation: rippleOut .55s ease-out forwards; }
+    @keyframes rippleOut { to { transform: translate(-50%, -50%) scale(1); opacity: 0; } }
 
     .stage { position: absolute; inset: 54px 0 30px 0; }
     .stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: none; background: var(--bg); }
@@ -40,6 +52,7 @@
     <nav class="swap" id="swap">
       <button data-tool="weather">🌦️ AeroWeather</button>
       <button data-tool="aipc">🛫 AIPC Planner</button>
+      <button class="soon" data-soon title="Algo se cocina… 👀">✨ Próximamente <span class="soon-tag">pronto</span></button>
     </nav>
   </header>
 
@@ -53,10 +66,12 @@
     <span class="ver" id="suite-ver" title="Versión cargada — sube al aplicar cambios. Si no cambia, el navegador no recargó.">v0.0.0</span>
   </footer>
 
+  <div class="suite-toast" id="suite-toast" role="status" aria-live="polite"></div>
+
   <script>
     // Versión visible de la Suite. Subir SIEMPRE al aplicar un cambio: si tras desplegar
     // este número no cambia en el footer, el navegador sirvió la versión vieja (caché).
-    const VERSION = 'v1.4.0';
+    const VERSION = 'v1.6.0';
 
     // Shell mínimo: alterna entre las dos apps (cada una corre intacta en su iframe).
     // Carga perezosa: el iframe recibe su src al mostrarse por primera vez (no carga las
@@ -67,7 +82,7 @@
       aipc:    { frame: document.getElementById('f-aipc'),    src: 'aipc/index.html' },
     };
     const KEY = 'suite.tool';
-    const btns = [...document.querySelectorAll('#swap button')];
+    const btns = [...document.querySelectorAll('#swap button[data-tool]')];   // solo las apps reales
 
     function show(tool) {
       if (!TOOLS[tool]) tool = 'weather';
@@ -81,6 +96,40 @@
 
     btns.forEach((b) => { b.onclick = () => show(b.dataset.tool); });
     show(localStorage.getItem(KEY) || 'weather');
+
+    // Broma "Próximamente" 😄 — guiño a algo que quizá integremos después. Por ahora no hace
+    // nada: al click suelta un mensajito al azar (sin repetir el anterior). Cuando exista de
+    // verdad, este botón se convierte en un tool más con su data-tool.
+    const SOON = [
+      '¿A dónde tan rápido, desesperao? 😄 Esto todavía ni despega 🛫',
+      'Calma, que pareces un Concorde con prisa 🛩️💨 — ya viene en camino',
+      "Aquí no hay na' todavía… pero suena bonito, ¿verdad? 😎",
+      'Tú más adelantao que un vuelo que sale antes del STD 😂',
+      'Próximamente… apenas ONAMET dé buen tiempo ⛅',
+      'Tranquilo, jefe, que Roma no se construyó en un solo deploy 🏗️',
+    ];
+    const toastEl = document.getElementById('suite-toast');
+    let toastT; let lastSoon = -1;
+    function suiteToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toastT);
+      toastT = setTimeout(() => toastEl.classList.remove('show'), 3400);
+    }
+    // Onda circular que se expande desde el punto del click (detalle bonito en "Próximamente").
+    function spawnRipple(x, y) {
+      const r = document.createElement('span');
+      r.className = 'ripple';
+      r.style.left = x + 'px'; r.style.top = y + 'px';
+      document.body.appendChild(r);
+      setTimeout(() => r.remove(), 600);
+    }
+    document.querySelector('[data-soon]')?.addEventListener('click', (e) => {
+      spawnRipple(e.clientX, e.clientY);
+      let i; do { i = Math.floor(Math.random() * SOON.length); } while (i === lastSoon && SOON.length > 1);
+      lastSoon = i;
+      suiteToast(SOON[i]);
+    });
 
     document.getElementById('suite-ver').textContent = VERSION;
     document.getElementById('yr').textContent = new Date().getFullYear();
