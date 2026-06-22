@@ -1,6 +1,7 @@
 // src/flightTransform.mjs — registros de vuelo → filas de la plantilla APC.
 // Reglas descubiertas (trazables a los archivos del cliente):
-//  - VUELO No.  = Llegada & "/" & número(Salida)  (normal; en OVER solo el vuelo que operó)
+//  - VUELO No.  = Llegada & "/" & número(Salida)  (normal; en OVER simple solo el vuelo que
+//                 operó; en OVER+OVER —AOG— SOLO la Llegada, la Salida puede cambiar)
 //  - RUTA       = FROM-PUJ-TO (normal) · PUJ-TO (OVER_IN) · FROM-PUJ (OVER_OUT) · PUJ (OVER doble)
 //  - OVER_IN    = STA día anterior → STA="OVER", solo salida, PAX IN/TRÁNSITO = N/A, CORREA = N/A
 //  - OVER_OUT   = STD día posterior → STD="OVER", solo llegada, PAX OUT = N/A, GATE = N/A
@@ -71,7 +72,9 @@ export function toApcRows(flights, { reportDay }) {
     const to = (f.to || '').trim();
     let vueloNo;
     let rutaVal;
-    if (overIn && overOut) { vueloNo = flightNo(f.arrFlight, f.depFlight); rutaVal = 'PUJ'; }
+    // OVER+OVER (avión AOG cruzando todo el día): SOLO el vuelo de LLEGADA — el de salida
+    // puede cambiar mientras esté en tierra por mantenimiento.
+    if (overIn && overOut) { vueloNo = (f.arrFlight || '').trim(); rutaVal = 'PUJ'; }
     else if (overIn) { vueloNo = (f.depFlight || '').trim(); rutaVal = `PUJ-${to}`; }
     else if (overOut) { vueloNo = (f.arrFlight || '').trim(); rutaVal = `${from}-PUJ`; }
     else { vueloNo = flightNo(f.arrFlight, f.depFlight); rutaVal = `${from}-PUJ-${to}`; }
