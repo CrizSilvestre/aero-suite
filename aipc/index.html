@@ -116,8 +116,12 @@
         <div id="view-excel" style="display:none">
           <div class="xlsx-tools">
             <span class="hint" style="margin:0">Arrastra la esquina ↘ para redimensionar (no se guarda).</span>
-            <button type="button" id="xlsx-expand" class="btn-ghost" title="Ver el Excel más completo">⛶ Ampliar</button>
+            <span class="xlsx-actions">
+              <button type="button" id="xlsx-export" class="btn-ghost" title="Guardar el .xlsx en una carpeta de la PC (con la fecha en el nombre)">💾 Exportar a carpeta</button>
+              <button type="button" id="xlsx-expand" class="btn-ghost" title="Ver el Excel más completo">⛶ Ampliar</button>
+            </span>
           </div>
+          <div class="hint" id="export-hint" style="margin:2px 0 6px;display:none"></div>
           <div class="xlsx-frame" id="xlsx-preview">
             <div class="placeholder">Pega los datos de AMS para ver el Excel.</div>
           </div>

@@ -245,6 +245,75 @@ function downloadXlsx(bytes, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
+// ---- exportar el .xlsx a una carpeta de la PC (recuerda la carpeta elegida) ------
+// Nombre con la fecha del REPORTE en D-M-AAAA ("/" no se permite en archivos). El adjunto
+// del correo NO cambia (ese va sin fecha). Usa File System Access API para recordar la
+// carpeta (handle en IndexedDB); si el navegador no la soporta, cae a descarga normal.
+function exportFilename() {
+  const [y, m, d] = state.day.split('-').map(Number);   // state.day = AAAA-MM-DD (día del reporte)
+  return `${CONFIG.attachmentName.replace(/\.xlsx$/i, '')} ${d}-${m}-${y}.xlsx`;
+}
+// mini almacén IndexedDB (localStorage NO guarda handles de carpeta)
+function idbDB() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('aipc', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('kv');
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+}
+async function idbSet(k, v) { const db = await idbDB(); return new Promise((res, rej) => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = () => rej(t.error); }); }
+async function idbGet(k) { const db = await idbDB(); return new Promise((res, rej) => { const t = db.transaction('kv', 'readonly'); const q = t.objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); }
+
+const DIR_KEY = 'aipc.exportDir';
+function showFolder(name) {
+  const h = $('export-hint'); if (!h) return;
+  h.style.display = '';
+  h.innerHTML = `Carpeta de exportación: <b>${name}</b> · <a href="#" id="export-change">cambiar</a>`;
+  $('export-change').onclick = (e) => { e.preventDefault(); pickFolder().catch((err) => { if (err?.name !== 'AbortError') toast('No se pudo cambiar la carpeta'); }); };
+}
+async function pickFolder() {
+  const dir = await window.showDirectoryPicker({ mode: 'readwrite' });
+  await idbSet(DIR_KEY, dir);
+  showFolder(dir.name);
+  return dir;
+}
+async function rememberedFolder() {
+  let dir = null;
+  try { dir = await idbGet(DIR_KEY); } catch { /* sin idb */ }
+  if (!dir) return null;
+  // los handles guardados arrancan en "prompt" cada sesión → re-pedir permiso (1 click)
+  if ((await dir.queryPermission({ mode: 'readwrite' })) !== 'granted'
+    && (await dir.requestPermission({ mode: 'readwrite' })) !== 'granted') return null;
+  return dir;
+}
+async function exportToFolder() {
+  if (!state.flights.length) { toast('Pega los datos de AMS primero'); return; }
+  let xlsx; let filename;
+  try {
+    const tplBuf = await (await fetch('./assets/template.xlsx')).arrayBuffer();
+    xlsx = await fillApcTemplate(tplBuf, editedRows(), { reportDay: state.day });
+    filename = exportFilename();
+  } catch (e) { console.error(e); toast('No se pudo generar el Excel: ' + (e?.message || e)); return; }
+
+  if (window.showDirectoryPicker) {
+    try {
+      const dir = (await rememberedFolder()) || (await pickFolder());   // elige una vez; se recuerda
+      const fh = await dir.getFileHandle(filename, { create: true });
+      const w = await fh.createWritable();
+      await w.write(new Blob([xlsx], { type: CONFIG.attachmentMime }));
+      await w.close();
+      showFolder(dir.name);
+      toast(`Guardado en "${dir.name}": ${filename}`);
+      return;
+    } catch (e) {
+      if (e?.name === 'AbortError') return;   // canceló el selector → no hacer nada
+      console.warn('File System Access no disponible, descargo:', e);   // iframe bloqueado u otro → respaldo
+    }
+  }
+  downloadXlsx(xlsx, filename);   // respaldo: descarga con el nombre fechado
+  toast(`Descargado: ${filename}`);
+}
+
 // ---- wiring -------------------------------------------------------------
 $('ams-input').addEventListener('input', (e) => onAms(e.target.value));
 $('ams-paste-btn').onclick = async () => {
@@ -354,6 +423,9 @@ function setExcelMax(on) {
 }
 $('xlsx-expand')?.addEventListener('click', () => setExcelMax(!$('view-excel').classList.contains('maximized')));
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setExcelMax(false); });
+
+$('xlsx-export')?.addEventListener('click', () => exportToFolder());
+idbGet(DIR_KEY).then((d) => { if (d) showFolder(d.name); }).catch(() => {});   // muestra la carpeta recordada
 
 updateDestUI();
 markPdf();   // restaura el horario guardado (si lo hay)

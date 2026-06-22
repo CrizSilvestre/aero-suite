@@ -138,7 +138,8 @@ input[type=date] { padding: 8px 10px; border: 1px solid var(--line-2); border-ra
 
 /* AIPC: barra de herramientas del Excel + modo Ampliar (ver el Excel más completo) */
 .xlsx-tools { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
-#xlsx-expand { font-size: 12px; padding: 4px 10px; white-space: nowrap; }
+.xlsx-actions { display: flex; gap: 8px; flex-shrink: 0; }
+#xlsx-expand, #xlsx-export { font-size: 12px; padding: 4px 10px; white-space: nowrap; }
 #view-excel.maximized .xlsx-frame { position: fixed; top: 10px; left: 10px; right: 10px; bottom: 10px;
   width: auto !important; height: auto !important; max-height: none; min-height: 0;
   z-index: 9999; resize: none; box-shadow: 0 10px 44px rgba(31,56,100,.35); }
