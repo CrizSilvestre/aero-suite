@@ -151,7 +151,7 @@ function validate() {
     ['PDF Mandos Medios cargado', !!state.schedule, truncName(state.pdfName, 40) || ''],
     ['Día seleccionado', !!state.day, state.day],
     ['Supervisores detectados', supCount > 0, `${supCount} en turno`],
-    ['Destinatarios (CCO)', bcc.length > 0, `${bcc.length}`],
+    ['Distribución (BCC)', bcc.length > 0, `${bcc.length}`],
   ].map(([label, ok, detail]) => ({ label, ok, detail }));
   return { checks, ready: checks.every((c) => c.ok) };
 }
@@ -264,11 +264,7 @@ $('day').onchange = (e) => { state.day = e.target.value || tomorrowISO(); render
 
 $('bcc-add').onclick = addBcc;
 $('bcc-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addBcc(); } });
-$('bcc-clear').onclick = () => {
-  if (state.bcc.length && confirm(`¿Borrar los ${state.bcc.length} destinatarios?`)) {
-    state.bcc = []; bccExpanded = false; persistBcc();
-  }
-};
+$('bcc-reset').onclick = () => { state.bcc = CONFIG.defaultRecipients.slice(); bccExpanded = false; persistBcc(); };
 
 const sig = $('signature-input');
 sig.innerHTML = state.signature;
