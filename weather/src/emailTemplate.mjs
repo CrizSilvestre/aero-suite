@@ -57,9 +57,12 @@ export function buildEmailHtml(report, images = {}, opts = {}) {
   const imgTag = (im, alt) => {
     const target = cfg.imageWidth || cfg.image.width;
     const w = Math.min(im.width || target, target);
-    return `<p style="${font};margin:0 0 11pt"><img src="cid:${im.cid}" alt="${esc(alt)}" width="${w}" ` +
+    return `<p style="${font};margin:0"><img src="cid:${im.cid}" alt="${esc(alt)}" width="${w}" ` +
       `style="width:${w}px;max-width:100%;height:auto;display:block;border:0"></p>`;
   };
+  // Separación robusta entre/junto a las imágenes: un div con ALTURA REAL (Outlook sí la
+  // respeta; los márgenes de <p> en imágenes a veces no → las imágenes quedaban pegadas).
+  const imgGap = '<div style="line-height:16px;font-size:1px;height:16px;mso-line-height-rule:exactly">&nbsp;</div>';
 
   const parts = [
     `<p style="${font};margin:0 0 11pt">${esc(greeting)}</p>`,
@@ -74,7 +77,9 @@ export function buildEmailHtml(report, images = {}, opts = {}) {
       `<strong>Salida del Sol:</strong> ${esc(report.sol?.salida || '')}<br>` +
       `<strong>Puesta del Sol:</strong> ${esc(report.sol?.puesta || '')}`, font),
     images.radar ? imgTag(images.radar, 'Radar / satélite') : '',
+    (images.radar && images.windy) ? imgGap : '',   // separa las dos imágenes para que no se peguen
     images.windy ? imgTag(images.windy, 'Windy') : '',
+    (images.radar || images.windy) ? imgGap : '',    // separa la última imagen de la firma
     cfg.signatureHtml || '',
   ];
 
