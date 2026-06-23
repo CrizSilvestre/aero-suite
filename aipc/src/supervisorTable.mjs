@@ -25,11 +25,12 @@ export function renderSupervisorTable(groups, { reportDay }) {
   //  - alineación y ancho también como ATRIBUTOS (align/width), no solo CSS.
   //  - bordes: border="1" en la tabla + border-collapse + 1px por celda → rejilla de 1px
   //    en todos los clientes aunque uno descarte el CSS (no se duplican por el collapse).
-  const f = `font-family:Arial, sans-serif;font-size:${CONFIG.table.fontSize}`;
-  // Padding compacto (más estilizado): menos espacio celda-borde que la versión previa.
-  const headStyle = `${f};background-color:${navy};color:#ffffff;font-weight:bold;text-align:center;border:1px solid #000000;padding:2px 6px`;
-  const cellStyle = `${f};color:#000000;border:1px solid #000000;padding:2px 5px;text-align:center`;
-  const nameStyle = `${f};color:#000000;border:1px solid #000000;padding:2px 6px;text-align:left`;
+  const f = `font-family:Arial, sans-serif;font-size:${CONFIG.table.fontSize};line-height:1.1`;
+  // Padding compacto + interlineado apretado: filas más bajas para que el cuadro no quede
+  // tan largo (1px vertical; el horizontal se deja para que el texto no toque el borde).
+  const headStyle = `${f};background-color:${navy};color:#ffffff;font-weight:bold;text-align:center;border:1px solid #000000;padding:1px 6px`;
+  const cellStyle = `${f};color:#000000;border:1px solid #000000;padding:1px 5px;text-align:center`;
+  const nameStyle = `${f};color:#000000;border:1px solid #000000;padding:1px 6px;text-align:left`;
 
   const th = (html, { colspan, width } = {}) =>
     `<td${colspan ? ` colspan="${colspan}"` : ''}${width ? ` width="${width}"` : ''}`
