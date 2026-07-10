@@ -5,7 +5,7 @@ import { CONFIG } from './config.mjs';
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 // Títulos tal como salen en el correo (mayúsculas).
-const NAVY_TITLES = {
+export const NAVY_TITLES = {
   Centro: 'SUPERVISOR DE CENTRO OPERACIONES',
   Rampa1: 'SUPERVISOR DE OPERACIONES RAMPA 1',
   MakeUp: 'SUPERVISOR DE OPERACIONES MAKE UP',

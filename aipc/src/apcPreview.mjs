@@ -18,12 +18,14 @@ function fechaLarga(reportDay) {
 const COLS = [
   ['vuelo', 'VUELO'], ['aerolinea', 'AEROLINEA'], ['vueloNo', 'VUELO No.'], ['sta', 'STA'], ['std', 'STD'],
   ['ruta', 'RUTA'], ['acType', 'A/C TYPE'], ['handler', 'HANDLER'], ['paxIn', 'PAX IN'], ['paxTransito', 'PAX TRANSITO'],
-  ['paxOut', 'PAX OUT'], ['correa', 'CORREA'], ['stand', 'STAND'], ['gate', 'GATE'], ['ckin', 'CK-IN TERM'],
+  ['paxOut', 'PAX OUT'], ['correa', 'CORREA'], ['stand', 'STAND'], ['gate', 'GATE'], ['ckin', 'TERMINAL'],
 ];
 const sumPax = (rows, key) => rows.reduce((a, r) => a + (/^\d+$/.test(r[key]) ? +r[key] : 0), 0);
 
-export function renderApcTable(apcRows, { reportDay }) {
-  if (!apcRows.length) return '<div class="placeholder">Pega los datos de AMS para ver el Excel.</div>';
+// removed: filas quitadas del reporte (operaciones especiales que no van). Se listan arriba
+// con opción de restaurar; NO entran en la tabla ni en el Excel.
+export function renderApcTable(apcRows, { reportDay, removed = [] } = {}) {
+  if (!apcRows.length && !removed.length) return '<div class="placeholder">Pega los datos de AMS para ver el Excel.</div>';
 
   const th = 'background:#92D050;border:1px solid #000;padding:4px 6px;font-weight:bold;text-align:center;white-space:nowrap';
   const td = 'border:1px solid #000;padding:2px 6px;text-align:center;white-space:nowrap';
@@ -40,12 +42,15 @@ export function renderApcTable(apcRows, { reportDay }) {
         : v === 'FERRY' ? ';font-weight:bold;color:#9a7d00'
         : (v === 'N/A' ? ';color:#888' : '');
       if (k === 'vuelo') {
-        // VUELO (nº) no editable; lleva el toggle de ferry en los vuelos candidatos.
-        const btn = isFerryable(r)
+        // VUELO (nº) no editable; lleva el toggle de ferry (candidatos) y el botón de
+        // eliminar operación (papelera roja) en todas las filas.
+        const ferryBtn = isFerryable(r)
           ? ` <button type="button" class="ferry-toggle${marked ? ' on' : ''}" data-fid="${r._fid}"`
             + ` title="${marked ? 'Quitar ferry (vuelve a N/A)' : 'Marcar ferry (PAX vacía → FERRY)'}">⛴</button>`
           : '';
-        return `<td style="${td}${extra}">${v}${btn}</td>`;
+        const delBtn = ` <button type="button" class="row-del" data-fid="${r._fid}"`
+          + ` title="Eliminar operación (no va en el reporte)">🗑</button>`;
+        return `<td style="${td}${extra};white-space:nowrap">${v}${ferryBtn}${delBtn}</td>`;
       }
       // Celda editable (edición libre): contenteditable + data para el override de sesión.
       return EDITABLE.includes(k)
@@ -74,11 +79,30 @@ export function renderApcTable(apcRows, { reportDay }) {
     + chip('#FFF2CC', '#d9b300', '#9a7d00', 'Posible ferry', ferryCount, '(solo aviso, revisar — no va en el Excel)')
     + '</div>';
 
+  // Aviso de operaciones eliminadas (con restaurar). Solo se muestra si hay alguna quitada.
+  let removedBanner = '';
+  if (removed.length) {
+    const items = removed.map((r) => `<span style="display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid #f1b0b0;`
+      + `border-radius:12px;padding:1px 8px">${esc(r.vueloNo || r.aerolinea || 'vuelo')} `
+      + `<button type="button" class="row-restore" data-fid="${r._fid}" title="Restaurar esta operación"`
+      + ` style="border:0;background:none;color:#c00000;cursor:pointer;font-size:12px;padding:0 2px">↩</button></span>`).join(' ');
+    removedBanner = '<div style="margin:0 0 10px;padding:6px 10px;border-radius:6px;background:#fdecec;border:1px solid #f1b0b0;color:#8a1f1f;font-size:11px">'
+      + `<b>🗑 ${removed.length} operación${removed.length > 1 ? 'es' : ''} eliminada${removed.length > 1 ? 's' : ''}</b> `
+      + '(no van en el reporte ni en el Excel) &nbsp; '
+      + `<a href="#" class="row-restore-all" style="color:#c00000">Restaurar todas</a><div style="margin-top:5px;display:flex;gap:6px;flex-wrap:wrap">${items}</div></div>`;
+  }
+
+  const table = apcRows.length
+    ? '<table style="border-collapse:collapse;font-family:Arial,sans-serif">'
+      + `<thead><tr>${head}</tr></thead><tbody>${body}${totalsRow}</tbody></table>`
+    : '<div class="placeholder">Todas las operaciones fueron eliminadas. Restaura alguna arriba.</div>';
+
   return '<div style="font-size:11px;color:#000">'
     + `<div style="font-weight:bold;font-size:13px;margin:0 0 8px">FECHA: ${esc(fechaLarga(reportDay))}</div>`
+    + removedBanner
     + legend
-    + '<table style="border-collapse:collapse;font-family:Arial,sans-serif">'
-    + `<thead><tr>${head}</tr></thead><tbody>${body}${totalsRow}</tbody></table>`
+    + table
     + `<div style="margin-top:8px;color:#888;font-size:11px">${apcRows.length} vuelos · ✏️ clic en una celda para editar`
-    + ' · ⛴ marca un vuelo como ferry (PAX vacía → FERRY) · <b>lo que edites aquí va en el Excel adjunto</b></div></div>';
+    + ' · ⛴ marca un vuelo como ferry (PAX vacía → FERRY) · 🗑 elimina una operación del reporte'
+    + ' · <b>lo que edites aquí va en el Excel adjunto</b></div></div>';
 }

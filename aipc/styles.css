@@ -152,3 +152,5 @@ input[type=date] { padding: 8px 10px; border: 1px solid var(--line-2); border-ra
 .ferry-toggle { font-size: 11px; line-height: 1; margin-left: 4px; padding: 1px 4px; border: 1px solid #d9b300; border-radius: 4px; background: #fff7e0; color: #9a7d00; cursor: pointer; vertical-align: middle; }
 .ferry-toggle:hover { background: #ffeebf; }
 .ferry-toggle.on { background: #9a7d00; color: #fff; border-color: #9a7d00; }
+.row-del { font-size: 11px; line-height: 1; margin-left: 4px; padding: 1px 4px; border: 1px solid #e0a0a0; border-radius: 4px; background: #fdecec; color: #c00000; cursor: pointer; vertical-align: middle; }
+.row-del:hover { background: #c00000; color: #fff; border-color: #c00000; }

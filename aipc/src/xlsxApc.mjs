@@ -38,6 +38,10 @@ export async function fillApcTemplate(templateBuf, apcRows, { reportDay }) {
   await wb.xlsx.load(templateBuf);
   const ws = wb.getWorksheet('Fecha') || wb.worksheets[0];
 
+  // Encabezado (fila 2): la plantilla traía "CK-IN TERM" (nombre equivocado). El correcto
+  // es "TERMINAL" (terminal de salida). Se cambia el texto conservando el estilo.
+  ws.getRow(2).getCell(15).value = 'TERMINAL';
+
   // FECHA como TEXTO largo en español (1ª letra mayúscula), fusionado en varias
   // celdas para que entre completo (un valor-fecha con formato largo daría "###").
   let fechaCell = ws.getCell('K1');

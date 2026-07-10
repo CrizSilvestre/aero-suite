@@ -16,14 +16,21 @@ function b64FromBytes(input) {
   return btoa(bin);
 }
 const wrap76 = (b64) => b64.replace(/(.{76})/g, `$1${CRLF}`);
+function dataUrlParts(dataUrl) {
+  const m = /^data:([^;]+);base64,(.*)$/s.exec(dataUrl);
+  if (!m) throw new Error('Se esperaba un data URL base64 para la imagen');
+  return { mime: m[1], b64: m[2] };
+}
 // Cabeceras no-ASCII: Subject RFC 2047, filename RFC 2231 (+ respaldo ASCII).
 const encWord = (s) => (/^[\x00-\x7F]*$/.test(s) ? s : '=?UTF-8?B?' + b64FromUtf8(s) + '?=');
 const asciiName = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\x20-\x7E]/g, '_');
 const filenameStar = (s) => "UTF-8''" + encodeURIComponent(s).replace(/['()]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase());
 
 // attachments: [{ filename, content (Buffer/Uint8Array/ArrayBuffer o base64 string), contentType }]
-export function buildEml({ subject = 'Asignación', to = '', bcc = [], html, attachments = [] }) {
-  const bnd = 'AIPC_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+// images:      [{ cid, filename, dataUrl }] — imágenes inline (cid) del cuerpo (multipart/related).
+export function buildEml({ subject = 'Asignación', to = '', bcc = [], html, attachments = [], images = [] }) {
+  const rand = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+  const bnd = 'AIPC_' + rand();
   const L = [];
   L.push('To: ' + (to || ''));
   if (bcc.length) L.push('Bcc: ' + bcc.join(', '));
@@ -33,11 +40,38 @@ export function buildEml({ subject = 'Asignación', to = '', bcc = [], html, att
   L.push('MIME-Version: 1.0');
   L.push(`Content-Type: multipart/mixed; boundary="${bnd}"`);
   L.push('');
-  L.push('--' + bnd);
-  L.push('Content-Type: text/html; charset="utf-8"');
-  L.push('Content-Transfer-Encoding: base64');
-  L.push('');
-  L.push(wrap76(b64FromUtf8(html)));
+
+  // Primera parte del mixed: el cuerpo HTML. Si hay imágenes inline, se envuelve el HTML y
+  // las imágenes en un multipart/related para que Outlook resuelva los "cid:" del cuerpo.
+  if (images.length) {
+    const rel = 'AIPC_rel_' + rand();
+    L.push('--' + bnd);
+    L.push(`Content-Type: multipart/related; type="text/html"; boundary="${rel}"`);
+    L.push('');
+    L.push('--' + rel);
+    L.push('Content-Type: text/html; charset="utf-8"');
+    L.push('Content-Transfer-Encoding: base64');
+    L.push('');
+    L.push(wrap76(b64FromUtf8(html)));
+    for (const img of images) {
+      const { mime, b64 } = dataUrlParts(img.dataUrl);
+      L.push('--' + rel);
+      L.push(`Content-Type: ${mime}; name="${asciiName(img.filename)}"`);
+      L.push('Content-Transfer-Encoding: base64');
+      L.push(`Content-ID: <${img.cid}>`);
+      L.push(`Content-Disposition: inline; filename="${asciiName(img.filename)}"`);
+      L.push('');
+      L.push(wrap76(b64));
+    }
+    L.push('--' + rel + '--');
+  } else {
+    L.push('--' + bnd);
+    L.push('Content-Type: text/html; charset="utf-8"');
+    L.push('Content-Transfer-Encoding: base64');
+    L.push('');
+    L.push(wrap76(b64FromUtf8(html)));
+  }
+
   for (const att of attachments) {
     const data = typeof att.content === 'string' ? att.content : b64FromBytes(att.content);
     L.push('--' + bnd);

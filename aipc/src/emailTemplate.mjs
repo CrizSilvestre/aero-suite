@@ -11,7 +11,10 @@ const fechaMedia = (reportDay) => {
   return `${d} de ${MESES[m - 1]} ${y}`;        // "20 de junio 2026"
 };
 
-export function buildEmailHtml(groups, { reportDay, signatureHtml } = {}) {
+// supervisorImg (opcional): { src, width, height }. Si viene, la tabla de supervisores se
+// inserta como IMAGEN (src = "cid:…" para el .eml de Outlook, o un data URL para pegar en
+// webmail). Sin él, se cae a la tabla HTML (respaldo / preview sin canvas).
+export function buildEmailHtml(groups, { reportDay, signatureHtml, supervisorImg } = {}) {
   const cfg = CONFIG;
   // Outlook de escritorio (Windows) renderiza con el motor de Word, que NO hereda
   // la fuente del <div> padre → sin esto los <p>/<a> caen a Times New Roman y el
@@ -20,6 +23,13 @@ export function buildEmailHtml(groups, { reportDay, signatureHtml } = {}) {
   const baseFont = `font-family:${cfg.font.family};font-size:${cfg.font.size};color:#000000`;
   const p = (html) => `<p style="${baseFont};line-height:17pt;mso-line-height-rule:exactly;margin:0 0 11pt">${html}</p>`;
   const link = (href, text) => `<a href="${href}" style="font-family:${cfg.font.family};font-size:${cfg.font.size}">${text}</a>`;
+
+  // Bloque de supervisores: imagen (conserva el formato en Outlook/OWA) o, de respaldo, la tabla HTML.
+  const supervisorBlock = supervisorImg
+    ? `<p style="margin:12px 0"><img src="${supervisorImg.src}" alt="${esc(cfg.supervisorTitle)}"`
+      + ` width="${supervisorImg.width}" height="${supervisorImg.height}"`
+      + ` style="display:block;border:0;width:${supervisorImg.width}px;height:${supervisorImg.height}px" /></p>`
+    : renderSupervisorTable(groups, { reportDay });
 
   const parts = [
     p('Saludos'),
@@ -31,7 +41,7 @@ export function buildEmailHtml(groups, { reportDay, signatureHtml } = {}) {
       + link(cfg.dashboardUrl, cfg.dashboardUrl)),
     p(`Solicite el usuario enviando un correo a `
       + link(`mailto:${cfg.slotsEmail}`, cfg.slotsEmail)),
-    renderSupervisorTable(groups, { reportDay }),
+    supervisorBlock,
     signatureHtml || cfg.signatureHtml || '',
   ];
 

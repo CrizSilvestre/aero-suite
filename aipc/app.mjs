@@ -6,6 +6,7 @@ import { fillApcTemplate } from './src/xlsxApc.mjs';
 import { itemsFromTextContent, parseSchedule } from './src/pdfSchedule.mjs';
 import { buildSupervisorAssignment } from './src/supervisorEngine.mjs';
 import { buildEmailHtml } from './src/emailTemplate.mjs';
+import { renderSupervisorImage } from './src/supervisorImage.mjs';
 import { renderApcTable } from './src/apcPreview.mjs';
 import { applyEdits, isFerryMarked } from './src/cellEdits.mjs';
 import { buildEml, downloadEml } from './src/eml.mjs';
@@ -37,6 +38,7 @@ const state = {
   signature: load(CONFIG.storageKeys.signature, ''),
   options: load(CONFIG.storageKeys.options, { dest: 'outlook' }),
   cellEdits: {},   // ediciones manuales del preview (edición libre + ferry); por sesión, NO se guardan
+  removed: new Set(),   // vuelos (_fid) eliminados del reporte (operaciones especiales); por sesión
 };
 state.options.dest = state.options.dest || 'outlook';
 
@@ -47,16 +49,44 @@ function toast(msg) {
 
 const dayNum = () => parseInt(state.day.split('-')[2], 10);
 const apcRows = () => (state.flights.length ? toApcRows(state.flights, { reportDay: state.day }) : []);
-// Filas con las ediciones manuales aplicadas (lo que se ve en el preview y va al Excel).
+// Filas con ediciones aplicadas, SIN las operaciones eliminadas y con VUELO renumerado.
+// Devuelve { rows (van al preview y al Excel), removed (las quitadas, para el aviso) }.
 let lastRows = [];
-const editedRows = () => { lastRows = applyEdits(apcRows(), state.cellEdits); return lastRows; };
+function buildRows() {
+  const all = applyEdits(apcRows(), state.cellEdits);
+  const diag = all.diag;
+  const removed = all.filter((r) => state.removed.has(r._fid));
+  const rows = all.filter((r) => !state.removed.has(r._fid));
+  rows.forEach((r, i) => { r.vuelo = i + 1; });   // renumera VUELO al quitar filas (sin huecos)
+  if (diag) Object.defineProperty(rows, 'diag', { enumerable: false, value: diag });
+  lastRows = rows;
+  return { rows, removed };
+}
+const editedRows = () => buildRows().rows;
 const groups = () => (state.schedule ? buildSupervisorAssignment(state.schedule, { day: dayNum() }) : []);
 const sigHtml = () => state.signature;
+
+// Imagen (PNG) de la tabla de supervisores para el cuerpo del correo — conserva el formato
+// en Outlook/OWA. Se cachea por día+grupos (no cambia al editar el Excel). Si el canvas
+// fallara, devuelve null y el correo cae a la tabla HTML.
+let _supCache = { key: '', img: null };
+function supervisorImage() {
+  const g = groups();
+  if (!g.length) return null;
+  const key = state.day + '|' + JSON.stringify(g);
+  if (_supCache.key === key) return _supCache.img;
+  let img = null;
+  try { img = renderSupervisorImage(g, { reportDay: state.day }); }
+  catch (e) { console.warn('No se pudo rasterizar la tabla de supervisores; uso tabla HTML.', e); }
+  _supCache = { key, img };
+  return img;
+}
 
 // ---- AMS ----------------------------------------------------------------
 function onAms(text) {
   state.flights = parseAmsClipboard(text || '');
   state.cellEdits = {};   // datos nuevos → se reinician las ediciones manuales
+  state.removed.clear();  // …y las operaciones eliminadas
   $('ams-status').textContent = `${state.flights.length} vuelos`;
   if (state.flights.length) toast(`${state.flights.length} vuelos leídos de AMS`);
   render();
@@ -179,9 +209,11 @@ function overBanner(diag) {
 }
 
 function render() {
-  const rows = editedRows();
-  $('preview').innerHTML = buildEmailHtml(groups(), { reportDay: state.day, signatureHtml: sigHtml() });
-  $('xlsx-preview').innerHTML = renderApcTable(rows, { reportDay: state.day });
+  const { rows, removed } = buildRows();
+  const img = supervisorImage();
+  const supervisorImg = img ? { src: img.dataUrl, width: img.width, height: img.height } : null;
+  $('preview').innerHTML = buildEmailHtml(groups(), { reportDay: state.day, signatureHtml: sigHtml(), supervisorImg });
+  $('xlsx-preview').innerHTML = renderApcTable(rows, { reportDay: state.day, removed });
   $('mailmeta').innerHTML = `${rows.length} vuelos · ${state.day}`;
   const { checks, ready } = validate();
   let checklistHtml = checks.map((c) =>
@@ -204,12 +236,17 @@ async function generate() {
     toast('Generando Excel y correo…');
     const tplBuf = await (await fetch('./assets/template.xlsx')).arrayBuffer();
     const xlsx = await fillApcTemplate(tplBuf, editedRows(), { reportDay: state.day });
-    const html = buildEmailHtml(groups(), { reportDay: state.day, signatureHtml: sigHtml() });
     const bcc = state.bcc.filter(isEmail);
+    const img = supervisorImage();
+
+    // Webmail (Gmail / Outlook Web): la imagen va como data URL EN LÍNEA (al pegar, el
+    // webmail la sube). En el .eml de Outlook va como cid inline (multipart/related).
+    const htmlInline = buildEmailHtml(groups(), { reportDay: state.day, signatureHtml: sigHtml(),
+      supervisorImg: img ? { src: img.dataUrl, width: img.width, height: img.height } : null });
 
     // Gmail / webmail: copia el cuerpo + descarga el Excel (Gmail no adjunta por pegar)
     if (state.options.dest === 'gmail') {
-      const ok = await copyRichHtml(html);
+      const ok = await copyRichHtml(htmlInline);
       downloadXlsx(xlsx, CONFIG.attachmentName);
       window.open(gmailComposeUrl({ subject: CONFIG.subject, bcc }), '_blank', 'noopener');
       toast(ok ? 'Correo copiado + Excel descargado · pega (Ctrl/Cmd+V) y adjunta el Excel en Gmail'
@@ -219,7 +256,7 @@ async function generate() {
 
     // Outlook Web (Office 365): mismo patrón que Gmail (el compose web no adjunta por pegar)
     if (state.options.dest === 'outlookweb') {
-      const ok = await copyRichHtml(html);
+      const ok = await copyRichHtml(htmlInline);
       downloadXlsx(xlsx, CONFIG.attachmentName);
       window.open(outlookWebComposeUrl({ subject: CONFIG.subject, bcc }), '_blank', 'noopener');
       toast(ok ? 'Correo copiado + Excel descargado · pega (Ctrl/Cmd+V) y adjunta el Excel en Outlook Web'
@@ -227,10 +264,14 @@ async function generate() {
       return;
     }
 
-    // Outlook: .eml con el Excel adjunto
+    // Outlook: .eml con el Excel adjunto + la tabla de supervisores como imagen inline (cid).
+    const cid = 'supervisores@aipc';
+    const html = buildEmailHtml(groups(), { reportDay: state.day, signatureHtml: sigHtml(),
+      supervisorImg: img ? { src: `cid:${cid}`, width: img.width, height: img.height } : null });
     const eml = buildEml({
       subject: CONFIG.subject, bcc, html,
       attachments: [{ filename: CONFIG.attachmentName, content: xlsx, contentType: CONFIG.attachmentMime }],
+      images: img ? [{ cid, filename: 'supervisores.png', dataUrl: img.dataUrl }] : [],
     });
     const opened = await downloadEml(eml, `AIPC-${state.day}.eml`);
     toast(opened ? 'Abriendo en Outlook…' : 'AIPC.eml descargado · ábrelo en Outlook');
@@ -394,6 +435,14 @@ xlsxPreview.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.target.closest?.('.px-edit')) { e.preventDefault(); e.target.blur(); }
 });
 xlsxPreview.addEventListener('click', (e) => {
+  // Eliminar operación (papelera) / restaurar una / restaurar todas.
+  const del = e.target.closest?.('.row-del');
+  if (del) { state.removed.add(+del.getAttribute('data-fid')); render(); return; }
+  const restore = e.target.closest?.('.row-restore');
+  if (restore) { state.removed.delete(+restore.getAttribute('data-fid')); render(); return; }
+  const restoreAll = e.target.closest?.('.row-restore-all');
+  if (restoreAll) { e.preventDefault(); state.removed.clear(); render(); return; }
+
   const btn = e.target.closest?.('.ferry-toggle'); if (!btn) return;
   const fid = +btn.getAttribute('data-fid');
   const row = lastRows.find((r) => r._fid === fid); if (!row) return;
