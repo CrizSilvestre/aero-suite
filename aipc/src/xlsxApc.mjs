@@ -30,6 +30,12 @@ function fechaLargaCap(reportDay) {
   const s = `${DIAS[wd]}, ${String(d).padStart(2, '0')} de ${MESES[m - 1]} de ${y}`;
   return s.charAt(0).toUpperCase() + s.slice(1);   // "Sábado, 20 de junio de 2026"
 }
+// Nombre de la pestaña: "DD - MM - AAAA" (como lo escribían a mano en la plantilla).
+function pestanaFecha(reportDay) {
+  const [y, m, d] = reportDay.split('-').map(Number);
+  return `${String(d).padStart(2, '0')} - ${String(m).padStart(2, '0')} - ${y}`;
+}
+
 const colToNum = (s) => s.split('').reduce((a, c) => a * 26 + (c.charCodeAt(0) - 64), 0);
 const numToCol = (n) => { let s = ''; let x = n; while (x > 0) { const r = (x - 1) % 26; s = String.fromCharCode(65 + r) + s; x = Math.floor((x - 1) / 26); } return s; };
 
@@ -37,6 +43,10 @@ export async function fillApcTemplate(templateBuf, apcRows, { reportDay }) {
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.load(templateBuf);
   const ws = wb.getWorksheet('Fecha') || wb.worksheets[0];
+
+  // Nombre de la PESTAÑA con la fecha del reporte ("22 - 02 - 2023"). Antes venía fijo en
+  // la plantilla y había que renombrarla a mano cada día; ahora se pone sola.
+  ws.name = pestanaFecha(reportDay);
 
   // Encabezado (fila 2): la plantilla traía "CK-IN TERM" (nombre equivocado). El correcto
   // es "TERMINAL" (terminal de salida). Se cambia el texto conservando el estilo.

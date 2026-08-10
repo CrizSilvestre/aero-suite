@@ -16,13 +16,14 @@ writeFileSync(new URL('./APC_generado.xlsx', import.meta.url), Buffer.from(buf))
 
 const wb = new ExcelJS.Workbook();
 await wb.xlsx.load(buf);
-const ws = wb.getWorksheet('Fecha');
+const ws = wb.worksheets[0];
 const fillOf = (c) => ws.getCell(c).fill?.fgColor?.argb || '';
 
 let fails = 0;
 const ok = (n, c) => { console.log(`${c ? '✓' : '✗'} ${n}`); if (!c) fails++; };
 console.log(`filas de datos generadas: ${rows.length}\n`);
 
+ok('pestaña con la fecha del reporte = "20 - 06 - 2026"', ws.name === '20 - 06 - 2026');
 ok('encabezado A2 = VUELO', ws.getCell('A2').value === 'VUELO');
 ok('encabezado verde #92D050 preservado', /92D050/i.test(fillOf('A2')));
 ok('encabezado Arial 13 negrita', ws.getCell('A2').font?.name === 'Arial' && ws.getCell('A2').font?.bold === true);
@@ -71,7 +72,7 @@ const edited = applyEdits(toApcRows(parseAmsClipboard(tsv), { reportDay: '2026-0
 const ebuf = await fillApcTemplate(readFileSync(TEMPLATE), edited, { reportDay: '2026-06-20' });
 const ewb = new ExcelJS.Workbook(); await ewb.xlsx.load(ebuf);
 let ferryWritten = false;
-ewb.getWorksheet('Fecha').eachRow((row, rn) => { if (rn >= 3 && String(row.getCell(11).value) === 'FERRY') ferryWritten = true; });
+ewb.worksheets[0].eachRow((row, rn) => { if (rn >= 3 && String(row.getCell(11).value) === 'FERRY') ferryWritten = true; });
 ok('edición manual · "FERRY" (PAX OUT) escrito tal cual en el Excel', ferryWritten);
 
 console.log(fails ? `\n${fails} FAILED` : '\nALL PASS · escrito test/APC_generado.xlsx');
