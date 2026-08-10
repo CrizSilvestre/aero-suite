@@ -34,7 +34,7 @@ export function buildEmailHtml(groups, { reportDay, signatureHtml, supervisorImg
   const parts = [
     p('Saludos'),
     p('Estimados,'),
-    p(`Adjunto encontrarán la asignación de Correas, Posiciones &amp; Gates AIPC correspondiente al `
+    p(`Adjunto encontrarán la asignación de Correas, Posiciones &amp; Gates APC correspondiente al `
       + `<strong>${esc(fechaMedia(reportDay))}</strong> para <strong>${esc(cfg.terminals)}</strong>.`),
     p('Cualquier cambio en la programación les será notificado por las vías correspondientes.'),
     p(`Nota: Información disponible en tiempo real a través de la plataforma `
