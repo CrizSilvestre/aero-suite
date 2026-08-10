@@ -4,7 +4,7 @@ Convierte el PDF de **ONAMET** (*Pronóstico Regional del Este y Marino para Pun
 en un **correo corporativo listo para enviar** — Asunto `Weather`, distribución por **CCO**, fuente
 **Arial 12 pt** e imágenes meteorológicas incrustadas. Soporta **Outlook** y **Gmail / webmail**.
 
-Pensado para el equipo de Operaciones del **Aeropuerto Internacional de Punta Cana (PUJ)**.
+Pensado para el equipo de Operaciones del **Aeropuerto de Punta Cana (PUJ)**.
 
 - App en vivo: https://crizsilvestre.github.io/aeroweather/
 - Repo: https://github.com/CrizSilvestre/aeroweather

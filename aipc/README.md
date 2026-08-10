@@ -1,6 +1,6 @@
 # APC Planner
 
-Automatiza la distribución diaria de operaciones del **Aeropuerto Internacional de Punta Cana (PUJ)**:
+Automatiza la distribución diaria de operaciones del **Aeropuerto de Punta Cana (PUJ)**:
 del pegado de **AMS** genera el **Excel APC** (Correas, Posiciones & Gates) idéntico, y del **PDF Mandos
 Medios** arma la **tabla de supervisores** del día — todo en un **correo** listo para enviar.
 
