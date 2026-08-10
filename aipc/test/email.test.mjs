@@ -32,14 +32,14 @@ const eml = buildEml({
   html,
   attachments: [{ filename: CONFIG.attachmentName, content: xlsxBuf, contentType: CONFIG.attachmentMime }],
 });
-writeFileSync('/Users/usuario/Desktop/AIPC-PRUEBA.eml', eml);
+writeFileSync('/Users/usuario/Desktop/APC-PRUEBA.eml', eml);
 
 let fails = 0;
 const ok = (n, c) => { console.log(`${c ? '✓' : '✗'} ${n}`); if (!c) fails++; };
 
 const subjRaw = (eml.match(/\r\nSubject: (.+)\r\n/) || [])[1] || '';
 const subjDecoded = /^=\?UTF-8\?B\?/.test(subjRaw) ? Buffer.from(subjRaw.replace(/^=\?UTF-8\?B\?(.+)\?=$/, '$1'), 'base64').toString('utf8') : subjRaw;
-ok('asunto correcto (UTF-8 codificado)', subjDecoded === 'Asignación de Correas, Posiciones & Gates AIPC');
+ok('asunto correcto (UTF-8 codificado)', subjDecoded === 'Asignación de Correas, Posiciones & Gates APC');
 ok('X-Unsent (borrador Outlook)', /\r\nX-Unsent: 1\r\n/.test(eml));
 ok('multipart/mixed', /multipart\/mixed/.test(eml));
 ok('adjunto .xlsx', /Content-Disposition: attachment; filename=".*\.xlsx"/.test(eml));
@@ -78,6 +78,6 @@ const attB64 = attSeg.split('\r\n\r\n')[1].split('\r\n--')[0].replace(/\r\n/g, '
 const attBytes = Buffer.from(attB64, 'base64');
 ok('adjunto es un .xlsx válido (firma PK)', attBytes[0] === 0x50 && attBytes[1] === 0x4B);
 
-console.log(`\nEscrito ~/Desktop/AIPC-PRUEBA.eml (${(eml.length / 1024).toFixed(0)} KB)`);
+console.log(`\nEscrito ~/Desktop/APC-PRUEBA.eml (${(eml.length / 1024).toFixed(0)} KB)`);
 console.log(fails ? `${fails} FAILED` : 'ALL PASS');
 process.exit(fails ? 1 : 0);

@@ -1,5 +1,5 @@
 // Aero Suite — servidor local (dev/preview). Sirve esta carpeta (shell + weather/ + aipc/)
-// con MIME correcto y expone POST /api/open-eml para autolanzar Outlook desde el AIPC.
+// con MIME correcto y expone POST /api/open-eml para autolanzar Outlook desde el APC.
 import { createServer } from 'node:http';
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -22,7 +22,7 @@ async function handleOpenEml(req, res) {
   for await (const c of req) chunks.push(c);
   const body = Buffer.concat(chunks).toString('utf8');
   if (!body) { res.writeHead(400).end('empty'); return; }
-  const file = join(tmpdir(), `AIPC-${Date.now()}.eml`);
+  const file = join(tmpdir(), `APC-${Date.now()}.eml`);
   await writeFile(file, body, 'utf8');
   execFile(process.platform === 'win32' ? 'start' : 'open', [file], (err) => {
     if (err) console.error('open failed:', err.message);

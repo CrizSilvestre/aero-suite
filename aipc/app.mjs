@@ -189,11 +189,11 @@ function validate() {
 // Diagnóstico OVER (clave para la PC corporativa): log detallado en consola + aviso en
 // pantalla cuando NO se detecta ningún OVER. Permite capturar qué pasa con cada dataset.
 function logOverDiag(diag) {
-  console.info(`[AIPC OVER] día=${diag.reportDay} · formato=${diag.formato} (${diag.metodo}) · `
+  console.info(`[APC OVER] día=${diag.reportDay} · formato=${diag.formato} (${diag.metodo}) · `
     + `vuelos=${diag.total} · OVER=${diag.over} (IN ${diag.overIn}/OUT ${diag.overOut}) · sinFecha=${diag.sinFecha}`);
   if (diag.over === 0 || diag.sinFecha > 0) {
     const ej = diag.detalle.slice(0, 4).map((d) => `STA="${d.rawSTA}" STD="${d.rawSTD}"`).join('  |  ');
-    console.warn('[AIPC OVER] 0 OVER o fechas sin parsear. Ejemplos de STA/STD CRUDOS → ' + ej);
+    console.warn('[APC OVER] 0 OVER o fechas sin parsear. Ejemplos de STA/STD CRUDOS → ' + ej);
     (console.table || console.log)(diag.detalle);
   }
 }
@@ -273,8 +273,8 @@ async function generate() {
       attachments: [{ filename: CONFIG.attachmentName, content: xlsx, contentType: CONFIG.attachmentMime }],
       images: img ? [{ cid, filename: 'supervisores.png', dataUrl: img.dataUrl }] : [],
     });
-    const opened = await downloadEml(eml, `AIPC-${state.day}.eml`);
-    toast(opened ? 'Abriendo en Outlook…' : 'AIPC.eml descargado · ábrelo en Outlook');
+    const opened = await downloadEml(eml, `APC-${state.day}.eml`);
+    toast(opened ? 'Abriendo en Outlook…' : 'APC.eml descargado · ábrelo en Outlook');
   } catch (e) { console.error(e); toast('Error al generar: ' + e.message); }
 }
 

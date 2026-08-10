@@ -30,7 +30,7 @@ const filenameStar = (s) => "UTF-8''" + encodeURIComponent(s).replace(/['()]/g, 
 // images:      [{ cid, filename, dataUrl }] — imágenes inline (cid) del cuerpo (multipart/related).
 export function buildEml({ subject = 'Asignación', to = '', bcc = [], html, attachments = [], images = [] }) {
   const rand = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
-  const bnd = 'AIPC_' + rand();
+  const bnd = 'APC_' + rand();
   const L = [];
   L.push('To: ' + (to || ''));
   if (bcc.length) L.push('Bcc: ' + bcc.join(', '));
@@ -44,7 +44,7 @@ export function buildEml({ subject = 'Asignación', to = '', bcc = [], html, att
   // Primera parte del mixed: el cuerpo HTML. Si hay imágenes inline, se envuelve el HTML y
   // las imágenes en un multipart/related para que Outlook resuelva los "cid:" del cuerpo.
   if (images.length) {
-    const rel = 'AIPC_rel_' + rand();
+    const rel = 'APC_rel_' + rand();
     L.push('--' + bnd);
     L.push(`Content-Type: multipart/related; type="text/html"; boundary="${rel}"`);
     L.push('');
@@ -87,7 +87,7 @@ export function buildEml({ subject = 'Asignación', to = '', bcc = [], html, att
 }
 
 // Navegador: intenta el endpoint local (autolanza Outlook) y cae a descarga.
-export async function downloadEml(eml, filename = 'AIPC.eml') {
+export async function downloadEml(eml, filename = 'APC.eml') {
   try {
     const res = await fetch('/api/open-eml', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: eml });
     if (res.ok) return true;

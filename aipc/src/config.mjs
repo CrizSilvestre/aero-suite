@@ -1,6 +1,6 @@
 // src/config.mjs — textos y valores corporativos del correo (editables).
 export const CONFIG = {
-  subject: 'Asignación de Correas, Posiciones & Gates AIPC',
+  subject: 'Asignación de Correas, Posiciones & Gates APC',
   terminals: 'Terminal A & Terminal B',
   dashboardUrl: 'https://dashboard.puntacanainternationalairport.com',
   slotsEmail: 'slotspuntacana@ams.com.do',
@@ -11,7 +11,7 @@ export const CONFIG = {
   supervisorTitle: 'SUPERVISORES DE OPERACIONES AIRSIDE EN TURNO',
   table: { width: 530, fontSize: '10pt' },
 
-  attachmentName: 'CAE-GOA-F23 Asignación de Correas, Posiciones & Gates AIPC.xlsx',
+  attachmentName: 'CAE-GOA-F23 Asignación de Correas, Posiciones & Gates APC.xlsx',
   attachmentMime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 
   // Editables en la web (como en AeroWeather), NO se versionan:
