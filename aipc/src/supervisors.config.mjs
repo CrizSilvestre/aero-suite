@@ -21,7 +21,7 @@ export const SUPERVISORS = [
   { name: 'FRANKLYN REYNARDO GONZALEZ', phone: '(829) 257-3738', group: 'Rampa1' },
   { name: 'TONY IMBERT', phone: '(829) 257-3738', group: 'Rampa1' },
   { name: 'CRISTHOFER ROBLES PAEZ', phone: '(809) 390-0890', group: 'MakeUp' },
-  { name: 'MANUEL ALEJANDRO SANTANA ABREU', phone: '(809) 769-5519', group: 'MakeUp' },
+  { name: 'MANUEL ALEJANDRO SANTANA ABREU', phone: '(809) 796-5519', group: 'MakeUp' },
   { name: 'ALEXANDER SABINO DEL ROSARIO', phone: '(809) 257-6797', group: 'MakeUp' },
   { name: 'DAVID ARTURO GARCIA BRITO', phone: '(829) 761-4580', group: 'MakeUp' },
   { name: 'BERLY VARGAS', phone: '(829) 257-4674', group: 'MakeUp' }, // PDF: "BERLY ALFRANDY VARGAS GARCIA"
