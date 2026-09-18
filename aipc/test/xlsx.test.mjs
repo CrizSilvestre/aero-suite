@@ -7,7 +7,9 @@ import { toApcRows } from '../src/flightTransform.mjs';
 import { fillApcTemplate } from '../src/xlsxApc.mjs';
 import { applyEdits } from '../src/cellEdits.mjs';
 
-const TEMPLATE = '/Users/usuario/Downloads/CAE-GOA-F23 Asignación de Correas, Posiciones & Gates APC-Plantilla.xlsx';
+// La plantilla que REALMENTE se despacha con la app (antes se leía una copia suelta
+// del Downloads del autor, que ni viajaba en el repo ni era la que usa el navegador).
+const TEMPLATE = new URL('../assets/template.xlsx', import.meta.url);
 const tsv = readFileSync(new URL('./datos_raw.tsv', import.meta.url), 'utf8');
 const rows = toApcRows(parseAmsClipboard(tsv), { reportDay: '2026-06-20' });
 
@@ -75,12 +77,27 @@ let ferryWritten = false;
 ewb.worksheets[0].eachRow((row, rn) => { if (rn >= 3 && String(row.getCell(11).value) === 'FERRY') ferryWritten = true; });
 ok('edición manual · "FERRY" (PAX OUT) escrito tal cual en el Excel', ferryWritten);
 
+// Plantilla "sucia": la de la app rellena con vuelos falsos en las filas 3-105, como estaba
+// la original (un reporte real, no una plantilla vacía). Sirve para probar que la fila de
+// totales no hereda nada aunque el día traiga menos vuelos que esos datos viejos.
+async function plantillaSucia() {
+  const w = new ExcelJS.Workbook();
+  await w.xlsx.load(readFileSync(TEMPLATE));
+  const h = w.worksheets[0];
+  for (let r = 3; r <= 105; r++) {
+    const vals = [r - 2, 'VIEJA AIR', `OLD ${r}`, '09:00', '10:00', 'XXX-PUJ-XXX', 'B738',
+      'HANDLER', 100, 10, 110, 9, 'B99', 99, 'B'];
+    vals.forEach((v, i) => { h.getRow(r).getCell(i + 1).value = v; });
+  }
+  return Buffer.from(await w.xlsx.writeBuffer());
+}
+
 // REGRESIÓN: la plantilla es un reporte REAL relleno (vuelos hasta la fila 105). Con un día
 // de MENOS vuelos que eso, la fila de totales cae dentro de esos datos viejos y antes dejaba
 // pasar el vuelo de la plantilla ("una operación de la nada" junto a los totales).
 for (const N of [50, 92, 93, 102]) {
   const cortas = toApcRows(parseAmsClipboard(tsv), { reportDay: '2026-06-20' }).slice(0, N);
-  const cbuf = await fillApcTemplate(readFileSync(TEMPLATE), cortas, { reportDay: '2026-06-20' });
+  const cbuf = await fillApcTemplate(await plantillaSucia(), cortas, { reportDay: '2026-06-20' });
   const cwb = new ExcelJS.Workbook(); await cwb.xlsx.load(cbuf);
   const cws = cwb.worksheets[0];
   const trow = cws.getRow(2 + N + 1);

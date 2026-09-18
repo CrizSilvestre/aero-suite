@@ -10,7 +10,7 @@ import { buildEmailHtml } from '../src/emailTemplate.mjs';
 import { buildEml } from '../src/eml.mjs';
 import { CONFIG } from '../src/config.mjs';
 
-const TEMPLATE = '/Users/usuario/Downloads/CAE-GOA-F23 Asignación de Correas, Posiciones & Gates APC-Plantilla.xlsx';
+const TEMPLATE = new URL('../assets/template.xlsx', import.meta.url);
 const SCHED = '/Users/usuario/Downloads/Horario Airside Junio 2026 - Mandos Medios - 05JUN26-f8bfkaj3nb89fqbqirhtxkefga (1).pdf';
 const DAY = '2026-06-20';
 
