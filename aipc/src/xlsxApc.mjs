@@ -102,15 +102,24 @@ export async function fillApcTemplate(templateBuf, apcRows, { reportDay }) {
   });
 
   // fila de TOTALES dinámica (suma del rango real de PAX; SUM ignora los "N/A")
+  // OJO: la plantilla es un reporte REAL relleno (vuelos en las filas 3-105). Si el día
+  // trae menos vuelos que eso, la fila de totales cae DENTRO de esos datos viejos; antes
+  // solo se le pisaba el estilo y las 3 columnas de PAX, así que el vuelo de la plantilla
+  // asomaba en el resto de columnas y parecía "una operación extra" en los totales.
+  // Por eso ahora se vacía la fila entera antes de escribir los totales.
   const tr = ws.getRow(totalsRow);
-  for (let c = 1; c <= COLS.length; c++) tr.getCell(c).style = { ...totalStyle[c] };
+  for (let c = 1; c <= COLS.length; c++) {
+    const cell = tr.getCell(c);
+    cell.value = null;
+    cell.style = { ...totalStyle[c] };
+  }
   tr.getCell(9).value = { formula: `SUM(I${FIRST}:I${lastData})` };   // PAX IN
   tr.getCell(10).value = { formula: `SUM(J${FIRST}:J${lastData})` };  // PAX TRANSITO
   tr.getCell(11).value = { formula: `SUM(K${FIRST}:K${lastData})` };  // PAX OUT
   tr.height = totalHeight;
 
   // limpiar sobrantes (totales viejo en 106, filas pobres 107-120, etc.)
-  const clearTo = Math.max(120, totalsRow + 40);
+  const clearTo = Math.max(120, totalsRow + 40, ws.rowCount || 0);
   for (let r = totalsRow + 1; r <= clearTo; r++) {
     const xr = ws.getRow(r);
     for (let c = 1; c <= COLS.length; c++) { const cell = xr.getCell(c); cell.value = null; cell.style = {}; }

@@ -75,5 +75,30 @@ let ferryWritten = false;
 ewb.worksheets[0].eachRow((row, rn) => { if (rn >= 3 && String(row.getCell(11).value) === 'FERRY') ferryWritten = true; });
 ok('edición manual · "FERRY" (PAX OUT) escrito tal cual en el Excel', ferryWritten);
 
+// REGRESIÓN: la plantilla es un reporte REAL relleno (vuelos hasta la fila 105). Con un día
+// de MENOS vuelos que eso, la fila de totales cae dentro de esos datos viejos y antes dejaba
+// pasar el vuelo de la plantilla ("una operación de la nada" junto a los totales).
+for (const N of [50, 92, 93, 102]) {
+  const cortas = toApcRows(parseAmsClipboard(tsv), { reportDay: '2026-06-20' }).slice(0, N);
+  const cbuf = await fillApcTemplate(readFileSync(TEMPLATE), cortas, { reportDay: '2026-06-20' });
+  const cwb = new ExcelJS.Workbook(); await cwb.xlsx.load(cbuf);
+  const cws = cwb.worksheets[0];
+  const trow = cws.getRow(2 + N + 1);
+  const sobra = [];
+  for (let c = 1; c <= 15; c++) {
+    if (c >= 9 && c <= 11) continue;           // I/J/K son los =SUM de PAX
+    const v = trow.getCell(c).value;
+    if (v !== null && v !== undefined && v !== '') sobra.push(`${c}=${JSON.stringify(v)}`);
+  }
+  let debajo = 0;
+  for (let r = 2 + N + 2; r <= 160; r++) for (let c = 1; c <= 15; c++) {
+    const v = cws.getRow(r).getCell(c).value;
+    if (v !== null && v !== undefined && v !== '') debajo++;
+  }
+  ok(`${N} vuelos · fila de totales SIN vuelo heredado de la plantilla`, sobra.length === 0);
+  if (sobra.length) console.log('   → sobrante:', sobra.join(' | '));
+  ok(`${N} vuelos · nada debajo de los totales`, debajo === 0);
+}
+
 console.log(fails ? `\n${fails} FAILED` : '\nALL PASS · escrito test/APC_generado.xlsx');
 process.exit(fails ? 1 : 0);
